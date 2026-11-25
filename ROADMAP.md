@@ -1,6 +1,6 @@
 # ROADMAP: Stellar account fixtures
 
-Last updated: 2026-11-24 03:30 UTC
+Last updated: 2026-11-25 01:35 UTC
 
 A corpus of public Stellar account reads, their provenance, and the validator that keeps
 the provenance honest. Nothing here is a claim about whether an account is well
@@ -36,9 +36,9 @@ empty gap list is gate G2.
 |---|---|---|---|---|
 | 0 | Ground truth | 5 | 6 | 83% |
 | 1 | Repository wrapper | 10 | 10 | 100% |
-| 2 | Coverage | 35 | 38 | 92% |
+| 2 | Coverage | 35 | 42 | 83% |
 | 3 | Consumer contract | 3 | 4 | 75% |
-| **All phases** | **Readiness total** | **53** | **58** | **91%** |
+| **All phases** | **Readiness total** | **53** | **62** | **85%** |
 | Gates | G1 to G5 | 2 | 5 | 40% |
 <!-- PROGRESS:END -->
 
@@ -164,6 +164,10 @@ python3 scripts/roadmap_progress.py --check ROADMAP.md
 - [x] **2.36** Fuzz `fixture.toml` and `account.json` with malformed bytes in `tests/test_validate_fuzz_malformed.py`. L. Deps: 2.21, 2.27. Done when: a fuzzer seeded with a fixed value and built on the standard library corrupts both files of a shipped fixture with invalid UTF-8, truncation, JSON scalars and deeply nested brackets, every case returns structured `fixtures/<id>:` problems from `validate()` with no exception, and the suite runs deterministically under unittest discovery. **Issue:** #84. (done 2026-11-21 21:24: added `tests/test_validate_fuzz_malformed.py`, 230 cases from seed 20261121 across hostile bytes, invalid UTF-8, truncation, digit flips, scalar documents and deep nesting. The fuzzer found three escapes, now problems: deeply nested JSON or TOML raised `RecursionError` (reported as `is not JSON` or `is not valid TOML` with `nested too deeply to parse`), and a digit flip that made `captured_at` an impossible date raised `ValueError` from `strptime` (reported as `is not a real UTC date and time`).)
 - [x] **2.37** Pin the `fetch()` retry schedule in `tests/test_capture_retry_schedule.py` with an injected sleep. M. Deps: 0.4. Done when: with `time.sleep` and `OPENER.open` patched, transient 5xx and network failures sleep exactly 1.5, 3.0 and 4.5 seconds, a fourth attempt is never made and `RuntimeError` follows the third failure, and a 4xx raises `Refused` at once without sleeping or retrying. **Issue:** #88. (done 2026-11-21 21:26: added `tests/test_capture_retry_schedule.py`, eleven tests covering 5xx, `URLError`, `TimeoutError` and `OSError` exhaustion, 4xx codes 400 to 499 including 429, a 4xx after a retry, recovery after two failures, the per-attempt request and 15 second timeout, and the exit codes 1 and 2 through `main()`; no test opens a socket or waits on a clock. No change to `tools/capture.py`.)
 - [x] **2.38** Table the checksum refusal for mutated `G...` addresses in `tests/test_capture_strkey_table.py`. S. Deps: 0.2. Done when: at least eight distinct mutations of a valid address each raise `Refused`, exit 2 through `main()` and print the refusal, and no network request or socket connection is made for any of them. **Issue:** #91. (done 2026-11-21 21:28: added `tests/test_capture_strkey_table.py`, fifteen mutations built at run time with `base64` and `binascii.crc_hqx` rather than `validate.py`'s own encoder: version byte flips that keep the leading `G`, a payload bit flip, a changed checksum nibble, transposed checksum bytes, all-zero payloads with a wrong checksum, a changed last character of a shipped account, lengths 55 and 57, the illegal characters `8`, `9`, `0` and `1`, and lowercase. Each row asserts the exact refusal it reaches, with `fetch`, `OPENER.open` and the socket entry points patched to fail if touched, and a control row proves the unmutated address gets as far as `fetch()`. No change to `tools/capture.py` or `validate.py`.)
+- [ ] **2.39** `.github/workflows/roadmap-check.yml` triggers on `pull_request` and push to main with no path filters, asserted by `tests/test_ci_roadmap_trigger.py`. M. Deps: none. Done when: `tests/test_ci_roadmap_trigger.py` passes, the workflow declares both triggers without `paths:` or `paths-ignore:`, and a hosted CI run is green. **Issue:** #108.
+- [ ] **2.40** `.github/workflows/*.yml` actions are pinned to 40-hex SHAs with version tags, enforced by `scripts/check_action_pins.py` and `tests/test_ci_action_pins.py`. M. Deps: none. Done when: every `uses` line carries a 40-hex SHA and trailing comment, each action uses one SHA across all workflows, and the real workflows pass `scripts/check_action_pins.py`. **Issue:** #107.
+- [ ] **2.41** `.github/workflows/ci.yml` runs the test suites across Python 3.11 and 3.12 with corpus validation on 3.11, asserted by `tests/test_ci_python_matrix.py`. M. Deps: none. Done when: `tests/test_ci_python_matrix.py` passes, ci.yml declares both versions in its matrix, and `python validate.py` is gated to 3.11. **Issue:** #109.
+- [ ] **2.42** `.github/workflows/pages.yml` runs `python3 scripts/sync_readme.py --check` before uploading Pages artifacts so stale site badges never deploy, asserted by `tests/test_site_badge_freshness.py`. M. Deps: none. Done when: `tests/test_site_badge_freshness.py` passes, pages.yml has the preflight step before `upload-pages-artifact`, and `scripts/sync_readme.py --check` exits 0. **Issue:** #110.
 
 ### Phase 3: Consumer contract
 
